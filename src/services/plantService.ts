@@ -1,7 +1,18 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { PlantInfo } from "../components/PlantDetails";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+const getAI = () => {
+  if (!aiInstance) {
+    const apiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("API kaliti topilmadi. Iltimos, Vercel-da GEMINI_API_KEY yoki VITE_GEMINI_API_KEY ni sozlang.");
+    }
+    aiInstance = new GoogleGenAI(apiKey);
+  }
+  return aiInstance;
+};
 
 const PLANT_SCHEMA = {
   type: Type.OBJECT,
@@ -33,6 +44,7 @@ const PLANT_SCHEMA = {
 };
 
 export const identifyPlantByImage = async (base64Image: string): Promise<PlantInfo> => {
+  const ai = getAI();
   const imagePart = {
     inlineData: {
       mimeType: "image/jpeg",
@@ -44,16 +56,15 @@ export const identifyPlantByImage = async (base64Image: string): Promise<PlantIn
     text: "Ushbu tasvirni tahlil qiling. AGAR TASVIRDA O'SIMLIK BO'LMASA (masalan, odam, mashina, hayvon yoki boshqa narsa bo'lsa), yoki tasvir juda noaniq bo'lib, unga mos keladigan HAQIQIY o'simlik turi topilmasa, isPlant ni false qilib belgilang. FAQAT HAQIQIY va ANIQ turlarni aniqlang. Agar o'simlik bo'lsa, haqiqiy botanika ma'lumotlarini bering. Qizil kitob holati va xavfliligiga (zaharliligiga) alohida e'tibor bering. JAVOB FAQAT O'ZBEK TILIDA BO'LSIN.",
   };
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: { parts: [imagePart, promptPart] },
-    config: {
+  const response = await ai.getGenerativeModel({ model: "gemini-3-flash-preview" }).generateContent({
+    contents: [{ role: 'user', parts: [imagePart, promptPart] }],
+    generationConfig: {
       responseMimeType: "application/json",
       responseSchema: PLANT_SCHEMA,
     },
   });
 
-  const parsed = JSON.parse(response.text || "{}");
+  const parsed = JSON.parse(response.response.text() || "{}");
   if (!parsed.isPlant) {
     throw new Error("Bunday tur hali kashf etilmagan yoki rasmda o'simlik aniqlanmadi.");
   }
@@ -61,20 +72,20 @@ export const identifyPlantByImage = async (base64Image: string): Promise<PlantIn
 };
 
 export const identifyPlantByName = async (name: string): Promise<PlantInfo> => {
+  const ai = getAI();
   const promptPart = {
     text: `Ushbu nomdagi o'simlik haqida to'liq botanika ma'lumotlarini bering: ${name}. Agar bunday o'simlik mavjud bo'lmasa yoki nomi noto'g'ri bo'lsa, isPlant ni false qiling. JAVOB FAQAT O'ZBEK TILIDA BO'LSIN.`,
   };
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: { parts: [promptPart] },
-    config: {
+  const response = await ai.getGenerativeModel({ model: "gemini-3-flash-preview" }).generateContent({
+    contents: [{ role: 'user', parts: [promptPart] }],
+    generationConfig: {
       responseMimeType: "application/json",
       responseSchema: PLANT_SCHEMA,
     },
   });
 
-  const parsed = JSON.parse(response.text || "{}");
+  const parsed = JSON.parse(response.response.text() || "{}");
   if (!parsed.isPlant) {
     throw new Error("Bunday tur hali kashf etilmagan (nomi bo'yicha).");
   }
@@ -82,22 +93,23 @@ export const identifyPlantByName = async (name: string): Promise<PlantInfo> => {
 };
 
 export const describePlantByPrompt = async (userInput: string): Promise<PlantInfo> => {
+  const ai = getAI();
   const promptPart = {
     text: `Foydalanuvchi quyidagicha o'simlikni tasvirladi: "${userInput}". Ushbu tavsifga mos keladigan HAQIQIY o'simlikni aniqlang. Agar tavsif juda umumiy bo'lsa yoki haqiqiy o'simlikka mos kelmasa, isPlant ni false qiling. JAVOB FAQAT O'ZBEK TILIDA BO'LSIN.`,
   };
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: { parts: [promptPart] },
-    config: {
+  const response = await ai.getGenerativeModel({ model: "gemini-3-flash-preview" }).generateContent({
+    contents: [{ role: 'user', parts: [promptPart] }],
+    generationConfig: {
       responseMimeType: "application/json",
       responseSchema: PLANT_SCHEMA,
     },
   });
 
-  const parsed = JSON.parse(response.text || "{}");
+  const parsed = JSON.parse(response.response.text() || "{}");
   if (!parsed.isPlant) {
     throw new Error("Tavsifga mos keladigan haqiqiy tur hali topilmadi.");
   }
   return parsed as PlantInfo;
 };
+
