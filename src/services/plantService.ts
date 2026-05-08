@@ -5,11 +5,13 @@ let aiInstance: GoogleGenAI | null = null;
 
 const getAI = () => {
   if (!aiInstance) {
-    const apiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+    // Vite-da API kalitni olishning eng xavfsiz yo'li
+    const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY;
+    
     if (!apiKey) {
-      throw new Error("API kaliti topilmadi. Iltimos, Vercel-da GEMINI_API_KEY yoki VITE_GEMINI_API_KEY ni sozlang.");
+      throw new Error("VITE_GEMINI_API_KEY topilmadi. Vercel-da Environment Variables qismini tekshiring.");
     }
-    aiInstance = new GoogleGenAI(apiKey);
+    aiInstance = new GoogleGenAI({ apiKey });
   }
   return aiInstance;
 };
@@ -56,15 +58,16 @@ export const identifyPlantByImage = async (base64Image: string): Promise<PlantIn
     text: "Ushbu tasvirni tahlil qiling. AGAR TASVIRDA O'SIMLIK BO'LMASA (masalan, odam, mashina, hayvon yoki boshqa narsa bo'lsa), yoki tasvir juda noaniq bo'lib, unga mos keladigan HAQIQIY o'simlik turi topilmasa, isPlant ni false qilib belgilang. FAQAT HAQIQIY va ANIQ turlarni aniqlang. Agar o'simlik bo'lsa, haqiqiy botanika ma'lumotlarini bering. Qizil kitob holati va xavfliligiga (zaharliligiga) alohida e'tibor bering. JAVOB FAQAT O'ZBEK TILIDA BO'LSIN.",
   };
 
-  const response = await ai.getGenerativeModel({ model: "gemini-3-flash-preview" }).generateContent({
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
     contents: [{ role: 'user', parts: [imagePart, promptPart] }],
-    generationConfig: {
+    config: {
       responseMimeType: "application/json",
       responseSchema: PLANT_SCHEMA,
     },
   });
 
-  const parsed = JSON.parse(response.response.text() || "{}");
+  const parsed = JSON.parse(response.text || "{}");
   if (!parsed.isPlant) {
     throw new Error("Bunday tur hali kashf etilmagan yoki rasmda o'simlik aniqlanmadi.");
   }
@@ -77,15 +80,16 @@ export const identifyPlantByName = async (name: string): Promise<PlantInfo> => {
     text: `Ushbu nomdagi o'simlik haqida to'liq botanika ma'lumotlarini bering: ${name}. Agar bunday o'simlik mavjud bo'lmasa yoki nomi noto'g'ri bo'lsa, isPlant ni false qiling. JAVOB FAQAT O'ZBEK TILIDA BO'LSIN.`,
   };
 
-  const response = await ai.getGenerativeModel({ model: "gemini-3-flash-preview" }).generateContent({
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
     contents: [{ role: 'user', parts: [promptPart] }],
-    generationConfig: {
+    config: {
       responseMimeType: "application/json",
       responseSchema: PLANT_SCHEMA,
     },
   });
 
-  const parsed = JSON.parse(response.response.text() || "{}");
+  const parsed = JSON.parse(response.text || "{}");
   if (!parsed.isPlant) {
     throw new Error("Bunday tur hali kashf etilmagan (nomi bo'yicha).");
   }
@@ -98,15 +102,16 @@ export const describePlantByPrompt = async (userInput: string): Promise<PlantInf
     text: `Foydalanuvchi quyidagicha o'simlikni tasvirladi: "${userInput}". Ushbu tavsifga mos keladigan HAQIQIY o'simlikni aniqlang. Agar tavsif juda umumiy bo'lsa yoki haqiqiy o'simlikka mos kelmasa, isPlant ni false qiling. JAVOB FAQAT O'ZBEK TILIDA BO'LSIN.`,
   };
 
-  const response = await ai.getGenerativeModel({ model: "gemini-3-flash-preview" }).generateContent({
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
     contents: [{ role: 'user', parts: [promptPart] }],
-    generationConfig: {
+    config: {
       responseMimeType: "application/json",
       responseSchema: PLANT_SCHEMA,
     },
   });
 
-  const parsed = JSON.parse(response.response.text() || "{}");
+  const parsed = JSON.parse(response.text || "{}");
   if (!parsed.isPlant) {
     throw new Error("Tavsifga mos keladigan haqiqiy tur hali topilmadi.");
   }
