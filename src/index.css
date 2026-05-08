@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-serif: "Playfair Display", serif;
+  
+  --color-neon-green: #00FF88;
+  --color-emerald: #00CCFF;
+  --color-cyan: #00CCFF;
+  --color-dark-bg: #020504;
+  --color-text-main: #E0F2F1;
+}
+
+:root {
+  --background: 160 10% 2%;
+  --foreground: 160 20% 95%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-dark-bg);
+  color: var(--color-text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+
+/* Glassmorphism custom styles */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-emerald {
+  background: rgba(0, 255, 136, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+.glow-green {
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.15);
+}
+
+.neon-border {
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+}
+
+.editorial-dots {
+  background-image: radial-gradient(#00FF88 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #05070a;
+}
+::-webkit-scrollbar-thumb {
+  background: #10b981;
+  border-radius: 10px;
+}

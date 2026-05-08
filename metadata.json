@@ -1,0 +1,10 @@
+{
+  "name": "IIP - Identification of Invasive Plants",
+  "description": "High-precision AI system for identifying invasive and toxic plants with detailed ecological impact analysis.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "AI Vision"
+  ]
+}
